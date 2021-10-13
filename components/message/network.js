@@ -1,12 +1,16 @@
 const express = require("express");
-// el router nos va a permitir separar cabeceras o por metodos o lo va a poder separar por url
-const router = express.Router();
+const multer = require("multer");
 
+const config = require("../../config");
 const controller = require("./controller");
 const response = require("../../network/response");
 
+const router = express.Router();
+const upload = multer({ dest: `public/${config.filesRoute}/` });
+
+
 router.get("/", (req, res) => {
-    const filterMessages = req.query.user || null;
+    const filterMessages = req.query.chat || null;
     controller.getMessages(filterMessages)
         .then(data => {
             response.success(req, res, data, 200);
@@ -16,8 +20,8 @@ router.get("/", (req, res) => {
         })
 });
 
-router.post("/", (req, res) => {
-    controller.addMessage(req.body.user, req.body.message)
+router.post("/", upload.single("file"), (req, res) => {
+    controller.addMessage(req.body.chat, req.body.user, req.body.message, req.file)
         .then(data => {
             response.success(req, res, data, 201);
         })

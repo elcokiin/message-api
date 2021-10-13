@@ -1,23 +1,30 @@
 const store = require("./store");
+const config = require("../../config");
+const { socket } = require("../../socket");
 
-function addMessage(user, message) {
-    return new Promise((resolve, reject) => {
-        if(!user || !message) {
-            reject("[messageController] user or message doesn't exit")
-        }
-        const fullMessage = {
-            user,
-            message,
-            date: new Date,
-        }
-        store.add(fullMessage);
-        resolve(fullMessage);
-    })
+function addMessage(chat, user, message, file) {
+    if(!chat || !user || !message) {
+        return Promise.reject("[messageController] user, chat or message doesn't exit");
+    }
+
+    const fileUrl = file ? `${config.host}:${config.port}${config.publicRoute}/${config.filesRoute}/${file.filename}` : "";
+
+    const fullMessage = {
+        chat,
+        user,
+        message,
+        date: new Date,
+        file: fileUrl,
+    }
+
+    socket.io.emit("message", fullMessage);
+
+    return store.add(fullMessage)
 }
 
-function getMessages(filterUser) {
+function getMessages(filterChat) {
     return new Promise((resolve, reject) => {
-        resolve(store.list(filterUser));
+        resolve(store.list(filterChat));
     })
 }
 

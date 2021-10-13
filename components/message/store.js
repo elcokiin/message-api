@@ -1,24 +1,25 @@
-const db = require("mongoose");
-const config = require("../../config");
 const Model = require("./model");
-
-db.Promise = global.Promise;
-const MONGO_URI = `mongodb+srv://${config.dbUser}:${config.dbPassword}@${config.dbHost}/${config.dbName}?retryWrites=true&w=majority`;
-db.connect(MONGO_URI, { useNewUrlParser: true });
-console.log("[db] connected successfully")
 
 function addMessage(message) {
     const myMessage = new Model(message);
-    myMessage.save();
+    return myMessage.save();
 }
 
-async function getMessage(filterUser) {
-    let filter = {};
-    if(filterUser !== null) {
-        filter = { user: filterUser }
-    }
-    const messages = await Model.find(filter);
-    return messages;
+async function getMessage(filterChat) {
+    return new Promise((resolve, reject) => {
+        let filter = {};
+        if(filterChat !== null) {
+            filter = { chat: filterChat }
+        }
+        Model.find(filter)
+            .populate("user")
+            .exec((err, populated) => {
+                if(err) {
+                    reject(err)
+                }
+                resolve(populated)
+            })
+    })
 }
 
 async function updateMessage(id, newMessage) {
